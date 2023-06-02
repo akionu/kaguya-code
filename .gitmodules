@@ -1,0 +1,3 @@
+[submodule "lib/pico-eeprom-i2c"]
+	path = lib/pico-eeprom-i2c
+	url = https://github.com/Yudetamago-AM/pico-eeprom-i2c.git

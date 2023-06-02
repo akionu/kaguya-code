@@ -1,0 +1,8 @@
+add_executable(ex6_I2C_and_RAM_optimizaton ex6_I2C_and_RAM_optimizaton.c)
+
+target_link_libraries(ex6_I2C_and_RAM_optimizaton pico_stdlib hardware_i2c vl53l5cx)
+
+pico_enable_stdio_usb(ex6_I2C_and_RAM_optimizaton 1)
+pico_enable_stdio_uart(ex6_I2C_and_RAM_optimizaton 0)
+
+pico_add_extra_outputs(ex6_I2C_and_RAM_optimizaton)

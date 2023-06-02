@@ -1,0 +1,8 @@
+add_executable(ex5_multiple_targets_per_zone ex5_multiple_targets_per_zone.c)
+
+target_link_libraries(ex5_multiple_targets_per_zone pico_stdlib hardware_i2c vl53l5cx)
+
+pico_enable_stdio_usb(ex5_multiple_targets_per_zone 1)
+pico_enable_stdio_uart(ex5_multiple_targets_per_zone 0)
+
+pico_add_extra_outputs(ex5_multiple_targets_per_zone)

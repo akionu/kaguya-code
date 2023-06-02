@@ -1,0 +1,8 @@
+add_executable(parachute_read parachute_read.c)
+
+target_link_libraries(parachute_read pico_stdlib hardware_i2c eeprom)
+
+pico_enable_stdio_usb(parachute_read 1)
+pico_enable_stdio_uart(parachute_read 0)
+
+pico_add_extra_outputs(parachute_read)
