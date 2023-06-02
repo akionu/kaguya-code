@@ -1,8 +1,0 @@
-add_executable(ex1_ranging_basic ex1_ranging_basic.c)
-
-target_link_libraries(ex1_ranging_basic pico_stdlib hardware_i2c vl53l5cx)
-
-pico_enable_stdio_usb(ex1_ranging_basic 1)
-pico_enable_stdio_uart(ex1_ranging_basic 0)
-
-pico_add_extra_outputs(ex1_ranging_basic)

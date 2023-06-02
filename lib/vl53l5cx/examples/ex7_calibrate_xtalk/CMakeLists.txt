@@ -1,8 +1,0 @@
-add_executable(ex7_calibrate_xtalk ex7_calibrate_xtalk.c)
-
-target_link_libraries(ex7_calibrate_xtalk pico_stdlib hardware_i2c vl53l5cx)
-
-pico_enable_stdio_usb(ex7_calibrate_xtalk 1)
-pico_enable_stdio_uart(ex7_calibrate_xtalk 0)
-
-pico_add_extra_outputs(ex7_calibrate_xtalk)

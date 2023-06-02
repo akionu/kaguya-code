@@ -1,3 +1,9 @@
 [submodule "lib/pico-eeprom-i2c"]
 	path = lib/pico-eeprom-i2c
 	url = https://github.com/Yudetamago-AM/pico-eeprom-i2c.git
+[submodule "lib/pico-vl53l5cx"]
+	path = lib/pico-vl53l5cx
+	url = https://github.com/Yudetamago-AM/pico-vl53l5cx.git
+[submodule "lib/pico-spl06-001"]
+	path = lib/pico-spl06-001
+	url = https://github.com/Yudetamago-AM/pico-spl06-001.git

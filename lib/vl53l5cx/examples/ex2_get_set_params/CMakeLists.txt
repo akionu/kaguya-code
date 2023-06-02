@@ -1,8 +1,0 @@
-add_executable(ex2_get_set_params ex2_get_set_params.c)
-
-target_link_libraries(ex2_get_set_params pico_stdlib hardware_i2c vl53l5cx)
-
-pico_enable_stdio_usb(ex2_get_set_params 1)
-pico_enable_stdio_uart(ex2_get_set_params 0)
-
-pico_add_extra_outputs(ex2_get_set_params)

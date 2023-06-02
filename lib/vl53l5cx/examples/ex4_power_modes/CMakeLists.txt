@@ -1,8 +1,0 @@
-add_executable(ex4_power_modes ex4_power_modes.c)
-
-target_link_libraries(ex4_power_modes pico_stdlib hardware_i2c vl53l5cx)
-
-pico_enable_stdio_usb(ex4_power_modes 1)
-pico_enable_stdio_uart(ex4_power_modes 0)
-
-pico_add_extra_outputs(ex4_power_modes)
