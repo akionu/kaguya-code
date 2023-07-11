@@ -14,6 +14,11 @@ void Motor::forward(int16_t pwm) {
     motor_rotate(slice_right, pwm);
 }
 
+void Motor::backward(int16_t pwm) {
+    motor_rotate(slice_left, pwm);
+    motor_rotate(slice_right, -pwm);
+}
+
 void Motor::stop() {
     motor_rotate(slice_left, 0);
     motor_rotate(slice_right, 0);

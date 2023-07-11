@@ -11,7 +11,7 @@ class Motor {
     public:
         void init(int8_t left, int8_t right);
         void forward(int16_t pwm);
-        void back(int16_t pwm);
+        void backward(int16_t pwm);
         void leftM();
         void rightM();
         void leftH(); // only 

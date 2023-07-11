@@ -1,9 +1,11 @@
+#pragma once
 #include <stdio.h>
 #include <math.h>
 #include "pico/stdlib.h"
 
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 #define abs(a) (((a)<0)?(-(a)):(a))
+#define CONST_180_DIVIDED_BY_PI 57.2957795130823
 
 /*平方根を使わず2点間の距離を近似*/
 //参考
@@ -29,3 +31,4 @@ int32_t approx_distance(int32_t dx, int32_t dy) {
    // add 512 for proper rounding
    return ((approx + 512) >> 10);
 } 
+

@@ -5,7 +5,8 @@ add_executable(flight
 target_link_libraries(flight 
     pico_stdlib 
     hardware_i2c 
-    gnss 
+    #gnss
+    ugps 
     health_monitor 
     kaguya-pin
     #motor_encoder 
