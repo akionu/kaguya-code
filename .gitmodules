@@ -7,3 +7,9 @@
 [submodule "lib/pico-spl06-001"]
 	path = lib/pico-spl06-001
 	url = https://github.com/Yudetamago-AM/pico-spl06-001.git
+[submodule "lib/pico-e220"]
+	path = lib/pico-e220
+	url = https://github.com/Yudetamago-AM/pico-e220.git
+[submodule "pico-bno08x"]
+	path = pico-bno08x
+	url = https://github.com/Yudetamago-AM/pico-bno08x.git

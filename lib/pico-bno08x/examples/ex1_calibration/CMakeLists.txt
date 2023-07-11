@@ -1,0 +1,8 @@
+add_executable(ex1_calibration ex1_calibration.cpp)
+
+target_link_libraries(ex1_calibration pico_stdlib hardware_i2c pico-bno08x)
+
+pico_enable_stdio_usb(ex1_calibration 1)
+pico_enable_stdio_uart(ex1_calibration 0)
+
+pico_add_extra_outputs(ex1_calibration)

@@ -1,0 +1,8 @@
+add_executable(ex0_rotation_vector ex0_rotation_vector.cpp)
+
+target_link_libraries(ex0_rotation_vector pico_stdlib hardware_i2c pico-bno08x)
+
+pico_enable_stdio_usb(ex0_rotation_vector 1)
+pico_enable_stdio_uart(ex0_rotation_vector 0)
+
+pico_add_extra_outputs(ex0_rotation_vector)

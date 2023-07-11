@@ -1,8 +1,8 @@
 add_executable(ex_motor_encoder)
 
-target_sources(ex_motor_encoder PRIVATE ex_motor_encoder.c)
+target_sources(ex_motor_encoder INTERFACE ex_motor_encoder.c)
 
-target_link_libraries(ex_motor_encoder PRIVATE
+target_link_libraries(ex_motor_encoder INTERFACE
         pico_stdlib
         pico_multicore
         hardware_pio
