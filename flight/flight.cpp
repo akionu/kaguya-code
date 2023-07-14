@@ -41,7 +41,7 @@ BNO080 bno08x;
 GPS gps(
     34801613, // goal_lat
     135770988, // goal_long
-    111, 92,
+    111, 92, // kyotanabe
     [](double x) {return (x*x);}
     );
 Tof tof;
