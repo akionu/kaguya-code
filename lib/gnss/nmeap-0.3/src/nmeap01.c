@@ -551,10 +551,10 @@ int nmeap_gpgga(nmeap_context_t *context,nmeap_sentence_t *sentence)
 		gga->geoid      = nmeap_altitude(context->token[11],context->token[12]);
 	}
 
-#ifndef NDEBUG    
+#if 0
+//#ifndef NDEBUG    
     /* print raw input string */
     printf("%s",context->debug_input);
-    
     /* print some validation data */
     printf("%s==%s %02x==%02x\n",context->input_name,sentence->name,context->icks,context->ccks);
     
@@ -562,10 +562,15 @@ int nmeap_gpgga(nmeap_context_t *context,nmeap_sentence_t *sentence)
     for(i=0;i<context->tokens;i++) {
         printf("%d:%s\n",i,context->token[i]);
     }
-#endif   
+    
+#endif
+
 
     /* if the sentence has a callout, call it */
     if (sentence->callout != 0) {
+        printf("gps ok: ");
+        printf("lat: %f, long: %f\n", gga->latitude, gga->longitude);
+
         (*sentence->callout)(context,gga,context->user_data);
     }
     

@@ -24,22 +24,22 @@ void Motor::stop() {
     motor_rotate(slice_right, 0);
 }
 
-void Motor::leftH() {
+void Motor::rightH() {
     motor_rotate(slice_left, -1023);
     motor_rotate(slice_right, 0);
 }
 
-void Motor::rightH() {
+void Motor::leftH() {
     motor_rotate(slice_left, 0);
     motor_rotate(slice_right, 1023);
 }
 
 void Motor::leftM() {
-    motor_rotate(slice_left, -800);
+    motor_rotate(slice_left, -500);
     motor_rotate(slice_right, 1023);
 }
 
 void Motor::rightM() {
-    motor_rotate(slice_right, 800);
     motor_rotate(slice_left, -1023);
+    motor_rotate(slice_right, 500);
 }

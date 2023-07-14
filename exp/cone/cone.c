@@ -166,7 +166,7 @@ void median(uint8_t in[64], uint8_t out[64])
 }
 
 void expand(uint8_t in[64], uint8_t out[64]) {
-    uint8_t max = 0, min = 0;
+    uint8_t max = in[0], min = in[0];
     double d;
     for (int i = 0; i < 64; i++) {
         if (in[i] > max) max = in[i];
@@ -176,7 +176,7 @@ void expand(uint8_t in[64], uint8_t out[64]) {
         d = 255.0 / ((double)max - (double)min) * ((double)in[i] - (double)min);
         if (d > 255.0) out[i] = 255;
         else if (d < 0.0) out[i] = 0;
-        else out[i] = d;
+        else out[i] = (int)d;
     }
 }
 
@@ -188,12 +188,13 @@ void findc(uint8_t in[64]) {
     for (uint8_t i = 0; i < 255; i++) {
         for (int j = i; j < i+10; j++) hist2[i] += hist[j];
     }
-
+#if 0
     for (uint8_t i = 0; i < 25; i++) {
         printf("%d-%d", i, i+10);
         for (uint8_t j = 0; j < hist2[i]; j++) printf("x");
         printf("\n");
     }
+#endif
 }
 
 void showval(uint8_t mat[64]) {
@@ -201,6 +202,25 @@ void showval(uint8_t mat[64]) {
         printf("%4d", mat[i-1]);
         if (i % 8 == 0) printf("\n");
     }
+}
+
+bool isCone(uint8_t in[64]) {
+    uint8_t cnt = 0;
+    uint16_t avg = 0;
+    double s = 0;
+    for (int8_t i = 0; i < 64; i++) {
+        avg += in[i];
+    }
+    avg /= 64;
+
+    for (int8_t i = 0; i < 64; i++) {
+        s += (double)((in[i]-avg)*(in[i]-avg));
+    }
+    s /= 64.0f;
+
+    printf("avg: %d, s: %f\n", avg, s);
+    if (s < 600) return true;
+    else return false;
 }
 
 int main(void) {
@@ -271,10 +291,14 @@ int main(void) {
                 gradient(mat2, mat, 1.1);
                 //memcpy(mat2, mat, 64);
                 showval(mat);
-                findc(mat);
+                //findc(mat);
+
+                printf("isCone: %d\n", isCone(mat));
                 
                 uint8_t th = discrim(mat);
+                printf("th: %d\n", th);
                 thresh(mat, th);
+                //thresh(mat, 200);
             #if 0
                 erosion(mat, mat2);
                 dilation(mat2, mat);

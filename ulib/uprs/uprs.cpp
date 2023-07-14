@@ -15,5 +15,5 @@ void Press::init() {
 float Press::getAlt() {
     spl06_read_press_cal(&config, &coef, &prs);
     alt = spl06_calc_alt(prs);
-    return prs;
+    return alt;
 }

@@ -16,7 +16,8 @@ target_link_libraries(flight
     eeprom 
     #pico-spl06-001 
     uprs
-    vl53l5cx 
+    #vl53l5cx 
+    utof
 )
 
 pico_enable_stdio_usb(flight 1)

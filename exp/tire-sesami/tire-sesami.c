@@ -3,6 +3,11 @@
 #include "../../lib/kaguya-pin/kaguya-pin.h"
 #include "../../lib/motor_encoder/src/motor.h"
 
+const uint left = motor_left_a_pin;
+const uint right = motor_right_a_pin;
+//const uint right = 21;
+
+
 void waitHuman(uint slice, int16_t pwm) {
     char c;
     printf("press 's' to set slice %d to pwm %d>\n", slice, pwm);
@@ -21,14 +26,8 @@ int main(void) {
     sleep_ms(2000);
     printf("TIRE SESAMI\n--\n");
 
-    uint slice_left = motor_init(motor_left_a_pin);
-    uint slice_right = motor_init(motor_right_a_pin);
-
-    motor_rotate(slice_left, -1023);
-    sleep_ms(1000);
-    motor_rotate(slice_left, 1023);
-    sleep_ms(1000);
-    motor_rotate(slice_left, 0);
+    uint slice_left = motor_init(left);
+    uint slice_right = motor_init(right);
 
     PIO pio = pio0;
     const uint sm = 0;
@@ -44,9 +43,11 @@ int main(void) {
     while (1) {
         quadrature_encoder_update_delta(pio, sm, delta);
         waitHuman(slice_right, pwm);
+        waitHuman(slice_left, pwm);
         printf("before: ");
         printf("M1: d %6d  M2: d %6d\n", delta[0], delta[1]);
         waitHuman(slice_right, 0);
+        waitHuman(slice_left, pwm);
         tafter = time_us_32();
         quadrature_encoder_update_delta(pio, sm, delta);
         printf("after: ");

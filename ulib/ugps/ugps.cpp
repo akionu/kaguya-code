@@ -11,10 +11,17 @@ GPS::GPS(int32_t goal_lat, int32_t goal_long,
     this->fx = fx;
 }
 
+void GPS::setFx(double(*fx)(double)) {
+    this->fx = fx;
+}
+
+static bool calc_flag = false;
 static bool is_ready = false;
 static void callout(nmeap_context_t *context, void *data, void *user_data) {
     is_ready = true;
+    calc_flag = false;
 }
+
 static nmeap_context_t nmea;
 static void on_uart1_rx() {
     while (uart_is_readable(uart1)) {
@@ -50,40 +57,45 @@ bool GPS::isReady() {
 
 int32_t GPS::getLongitude() {
     int32_t ret;
-    ret = (int32_t)(gga.longitude * 1000000);
+    ret = (int32_t)(gga.longitude * 1000000.0f);
     return ret;
 }
 
 int32_t GPS::getLatitude() {
     int32_t ret;
-    ret = (int32_t)(gga.latitude * 1000000);
+    ret = (int32_t)(gga.latitude * 1000000.0f);
     return ret;
 }
 
+void GPS::calc() {
+    long_now = getLongitude();
+    lat_now  = getLatitude();
+    dx = ((goal_longitude - long_now) * long_per_res);//0.000001度で0.092m(京田辺)，0.085m(能代)より，単位メートル
+    dy = ((goal_latitude - lat_now) * lat_per_res);//0.000001度で0.111m(111)より0.1
+
+    //printf("lat, long: %d, %d\n", lat_now, long_now);
+    printf("dx, dy: %d, %d\n", dx, dy);
+    calc_flag = true;
+}
+
 float GPS::getDirection() {
-    float direction;
-    int32_t long_now = getLongitude();
-    int32_t lat_now  = getLatitude();
-    int32_t dx = ((goal_longitude - long_now) * (int32_t)long_per_res);//0.000001度で0.092m(京田辺)，0.085m(能代)より，単位メートル
-    int32_t dy = ((goal_latitude - lat_now) * (int32_t)lat_per_res);//0.000001度で0.111m(111)より0.1
+    double direction;
+    if (!calc_flag) calc();
     dy = (int32_t)((double)dy*fx(0.8));
     
     if (dx == 0 && dy == 0) direction = 0.0f;
     else direction = atan2(dx, dy);
 
-    return direction;
+    return (float)direction;
 }
 
 float GPS::getDistance() {
-    float distance;
-    int32_t long_now = getLongitude();
-    int32_t lat_now  = getLatitude();
-    int32_t dx = ((goal_longitude - long_now) * (int32_t)long_per_res);//0.000001度で0.092m(京田辺)，0.085m(能代)より，単位メートル
-    int32_t dy = ((goal_latitude - lat_now) * (int32_t)lat_per_res);//0.000001度で0.111m(111)より0.1
+    double distance;
+    if (!calc_flag) calc();
     
-    distance = approxDistance(dx, dy) / 10;
+    distance = (double)approxDistance(dx, dy) / 1000.0f;
     distance = ((distance < 0) ? (-distance) : distance);
-    return distance;
+    return (float)distance;
 }
 
 /*平方根を使わず2点間の距離を近似*/
