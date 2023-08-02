@@ -13,11 +13,12 @@ target_link_libraries(flight
     umotor
     pico-bno08x 
     pico_e220 
-    eeprom 
+    #eeprom 
     #pico-spl06-001 
     uprs
     #vl53l5cx 
     utof
+    ulog
 )
 
 pico_enable_stdio_usb(flight 1)

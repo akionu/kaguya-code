@@ -24,17 +24,18 @@ class Tof {
         bool init();
         bool start();
         bool stop();
-        bool isCaptureReady();
+        uint8_t isCaptureReady();
         void capture();
         bool isConeReady();
         bool isCone();
+        void showval(uint8_t mat[64]);
         uint8_t getCenterCm();
     private:
         void gradient(uint8_t in[64], uint8_t out[64], double amp);
         void median(uint8_t in[64], uint8_t out[64]);
         uint8_t median_value(uint8_t d[9]);
         void expand(uint8_t in[64], uint8_t out[64]);
-        bool _isCone(uint8_t in[64]);
+        bool aisCone(uint8_t in[64]);
 
         uint8_t status, is_ready, is_alive;
         VL53L5CX_Configuration dev;

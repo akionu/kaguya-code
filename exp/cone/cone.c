@@ -271,8 +271,10 @@ int main(void) {
     static uint8_t mat[64] = {0};
     static uint8_t mat2[64] = {0};
     static uint16_t matbuf[64] = {0};
+    uint32_t before_ms;
 
     while (1) {
+        before_ms = time_us_32() / 1000;
         //if (getchar() == 'q') goto exit;
         status = vl53l5cx_check_data_ready(&dev, &is_ready);
         if (is_ready) {
@@ -280,7 +282,9 @@ int main(void) {
 
             if (cnt == 2) {
                 cnt = 0;
-                for (uint8_t i = 0; i < 64; i++) mat[i] = (uint8_t)(matbuf[i] / 3);
+                //for (uint8_t i = 0; i < 64; i++) mat[i] = (uint8_t)(matbuf[i] / 3);
+                for (uint8_t i = 0; i < 64; i++) mat[i] = (uint8_t)(matbuf[i]/3);
+
 #if 1   
                 // コントラスト強調
                 expand(mat, mat2);
@@ -295,9 +299,9 @@ int main(void) {
 
                 printf("isCone: %d\n", isCone(mat));
                 
-                uint8_t th = discrim(mat);
-                printf("th: %d\n", th);
-                thresh(mat, th);
+                //uint8_t th = discrim(mat);
+                //printf("th: %d\n", th);
+                //thresh(mat, th);
                 //thresh(mat, 200);
             #if 0
                 erosion(mat, mat2);
@@ -305,7 +309,7 @@ int main(void) {
                 dilation(mat, mat2);
                 erosion(mat2, mat);
             #endif
-                show(mat);
+                //show(mat);
 #endif
 
 #if 0      
@@ -337,7 +341,9 @@ int main(void) {
         
                 for (int i = 0; i < 64; i++) matbuf[i] = 0;
                 for (int i = 0; i < 64; i++) mat[i] = 0;
-            } 
+                uint32_t after_ms = time_us_32() / 1000;
+                printf("elaplsed time: %d\n", after_ms - before_ms);
+            }
             // distance_mm / 4000 * 255 = distance_mm / 15.68... = distance_mm / 16
             //for (int j = 0; j < 64; j++) matbuf[j] += (uint8_t)(res.distance_mm[j] / 16);
             

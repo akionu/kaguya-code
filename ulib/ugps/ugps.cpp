@@ -89,13 +89,16 @@ float GPS::getDirection() {
     return (float)direction;
 }
 
+// ゴールまでの距離(m)を返す
 float GPS::getDistance() {
     double distance;
     if (!calc_flag) calc();
     
     distance = (double)approxDistance(dx, dy) / 1000.0f;
     distance = ((distance < 0) ? (-distance) : distance);
-    return (float)distance;
+    //return (float)distance;
+    return (1.5f);
+
 }
 
 /*平方根を使わず2点間の距離を近似*/

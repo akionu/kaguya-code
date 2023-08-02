@@ -29,6 +29,7 @@ bool Tof::init() {
     status = vl53l5cx_set_ranging_mode(&dev, VL53L5CX_RANGING_MODE_CONTINUOUS);
     if (status) printf("err: set_ranging_mode\n");
 
+    //start();
     if (!status) return true;
     else return false;
 }
@@ -49,11 +50,11 @@ bool Tof::stop() {
     else return false;
 }
 
-bool Tof::isCaptureReady() {
-    status = vl53l5cx_check_data_ready(&dev, &is_ready);
-    bool ret = is_ready;
+uint8_t Tof::isCaptureReady() {
     is_ready = false;
-    return ret;
+    printf("bufcnt: %d\n", bufcnt);
+    status = vl53l5cx_check_data_ready(&dev, &is_ready);
+    return is_ready;
 }
 
 void Tof::capture() {
@@ -62,23 +63,37 @@ void Tof::capture() {
     bufcnt++;
 }
 
+
 bool Tof::isConeReady() {
+    //return true;
     if (bufcnt >= 2) return true;
     else return false;
+}
+
+
+void Tof::showval(uint8_t mat[64]) {
+    for (uint8_t i = 1; i <= 64; i++) {
+        printf("%4d", mat[i-1]);
+        if (i % 8 == 0) printf("\n");
+    }
 }
 
 bool Tof::isCone() {
     if (bufcnt == 2) {
         bufcnt = 0;
-        for (uint8_t i = 0; i < 64; i++) mat[i] = (uint8_t)(matbuf[i] / 3);
+        // tyuui!
+        for (uint8_t i = 0; i < 64; i++) 
+            mat[i] = (uint8_t)(matbuf[i] / 3);
         // コントラスト強調
         expand(mat, mat2);
+        memcpy(mat2, mat, 64);
         // ノイズ除去（メディアンフィルタ）
-        median(mat2, mat);
+        median(mat, mat2);
         // エッジ抽出
-        gradient(mat, mat2, 1.1);
+        gradient(mat2, mat, 1.1);
+        showval(mat);
         // コーン判定
-        bool res = _isCone(mat2);
+        bool res = aisCone(mat);
 
         for (int8_t i = 0; i < 64; i++) matbuf[i] = 0;
         for (int8_t i = 0; i < 64; i++) mat[i] = 0;
@@ -88,7 +103,7 @@ bool Tof::isCone() {
     return false;
 }
 
-bool Tof::_isCone(uint8_t in[64]) {
+bool Tof::aisCone(uint8_t in[64]) {
     uint8_t cnt = 0;
     uint16_t avg = 0;
     double s = 0;
@@ -169,10 +184,10 @@ void Tof::median(uint8_t in[64], uint8_t out[64]) {
 }
 
 void Tof::gradient(uint8_t in[64], uint8_t out[64], double amp) {
-    static int8_t cx[9] = {0, 0, 0,
+    static float cx[9] = {0, 0, 0,
                             0, 1, 0,
                             0, 0, -1};
-    static int8_t cy[9] = {0, 0, 0,
+    static float cy[9] = {0, 0, 0,
                             0, 0, 1,
                             0, -1, 0};
 

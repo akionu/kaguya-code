@@ -36,7 +36,10 @@
 #include <math.h>
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
-#include "i2c_write_nors_blocking.h"
+extern "C" {
+	#include "i2c_write_nors_blockinga.h"
+
+}
 
 //The default I2C address for the BNO080 on the SparkX breakout is 0x4B. 0x4A is also possible.
 #define BNO080_DEFAULT_ADDRESS 0x4B

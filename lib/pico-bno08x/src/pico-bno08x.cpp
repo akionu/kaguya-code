@@ -1458,7 +1458,7 @@ bool BNO080::sendPacket(uint8_t channelNumber, uint8_t dataLength)
 		shtpHeader[3] = sequenceNumber[channelNumber]++; //Send the sequence number, increments with each packet sent, different counter for each channel
 
 		//waitForWriteI2C();
-		int16_t ret = i2c_write_nors_blocking(_i2cBus, _deviceAddress, shtpBuffer, packetLength);
+		int16_t ret = i2c_write_nors_blockinga(_i2cBus, _deviceAddress, shtpBuffer, packetLength);
 		
 		if (_printDebug == true)
 			printf("send: ");
