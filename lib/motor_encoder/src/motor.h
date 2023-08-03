@@ -6,6 +6,9 @@
 
 #include "quadrature_encoder.pio.h"
 
+//#define SEITEN
+#define GYAKUTEN
+
 // control motor
 
 /// @brief initialize pwm channels for motor

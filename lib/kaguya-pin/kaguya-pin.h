@@ -49,5 +49,5 @@ const uint voltage_sense_pin  = 27;
 const uint led_pin            = 17;
 
 // nichrome
-const uint nichrome_pin       = 15;
+const uint nichrome_pin       = 15; // input HIGH to ON
 

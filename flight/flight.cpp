@@ -131,7 +131,7 @@ class Mode {
                 printf("alt: %f, s: %f\n", alt_change[9], s);
                 if (s < 0.06) {
                     addLogBuf("s:%1.2f a:%.0f land", s, avg);
-                    return MODE_FORWARD_LANDING;
+                    return MODE_NICHROME;
                 }
             } else {
                 landingCnt = 0;
@@ -139,9 +139,9 @@ class Mode {
                 if (landingCnt > (300*SEC2CNT)) {
                     if (abs(alt_change[9]-alt_ref) < 10) {
                         addLogBuf("la:%4d");
-                        return MODE_FORWARD_LANDING;
+                        return MODE_NICHROME;
                     } else if (landingCnt > (500*SEC2CNT)) {
-                        return MODE_FORWARD_LANDING;
+                        return MODE_NICHROME;
                     }
                 } else {
                     landingCnt++;
@@ -150,6 +150,19 @@ class Mode {
             return MODE_LANDING;
         }
         float alt_ref;
+
+        int8_t nichrome() {
+            if (expansionCnt > (2*SEC2CNT)) {
+                gpio_put(nichrome_pin, 0);
+                addLogBuf("cnt:%d d", expansionCnt);
+                printf("nichrome done\n");
+                return MODE_EXPANSION;
+            } else {
+                gpio_put(nichrome_pin, 1);
+                expansionCnt++;
+                return MODE_NICHROME;
+            }
+        }
 
         int8_t expansion() {
             motor.backward(1023);
@@ -395,6 +408,9 @@ void update() {
     case MODE_LANDING:
         ret = mode.landing();
         break;
+    case MODE_NICHROME:
+        ret = mode.nichrome();
+        break;
     case MODE_EXPANSION:
         ret = mode.expansion();
         break;
@@ -484,6 +500,7 @@ int main(void) {
     // nichrome
     gpio_init(nichrome_pin);
     gpio_set_dir(nichrome_pin, GPIO_OUT);
+    gpio_put(nichrome_pin, 0);
 
     // led
     gpio_init(led_pin);
@@ -503,6 +520,7 @@ int main(void) {
     add_repeating_timer_ms(-500, &rtCallback, NULL, &timer);
     while (1) {
         if (rt_flag) {
+            rt_flag = false;
             update();
         }   
     }

@@ -20,6 +20,7 @@ void motor_brake(uint8_t slice) {
 
 void motor_rotate(uint8_t slice, int16_t pwm) {
     // abs(pwm) < 500 (at 7.4V) means no rotation because of high(1:380) gear rates
+#ifdef SEITEN
     if (pwm > 0) {
         // forward
         pwm_set_chan_level(slice, PWM_CHAN_A, 0);
@@ -29,7 +30,18 @@ void motor_rotate(uint8_t slice, int16_t pwm) {
         pwm_set_chan_level(slice, PWM_CHAN_A, -pwm);
         pwm_set_chan_level(slice, PWM_CHAN_B, 0);
     }
-    
+#endif
+#ifdef GYAKUTEN
+    if (pwm > 0) {
+        // forward
+        pwm_set_chan_level(slice, PWM_CHAN_A, pwm);
+        pwm_set_chan_level(slice, PWM_CHAN_B, 0);
+    } else {
+        // backward
+        pwm_set_chan_level(slice, PWM_CHAN_A, 0);
+        pwm_set_chan_level(slice, PWM_CHAN_B, -pwm);
+    }
+#endif
     pwm_set_enabled(slice, true);
 }
 
