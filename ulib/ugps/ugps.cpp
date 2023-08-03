@@ -96,8 +96,8 @@ float GPS::getDistance() {
     
     distance = (double)approxDistance(dx, dy) / 1000.0f;
     distance = ((distance < 0) ? (-distance) : distance);
-    //return (float)distance;
-    return (1.5f);
+    return (float)distance;
+    //return (1.5f);
 
 }
 
