@@ -3,8 +3,8 @@
 #include "hardware/i2c.h"
 #include "../../lib/pico-eeprom-i2c/src/eeprom.h"
 
-#define I2C_SDA 14
-#define I2C_SCL 15
+#define I2C_SDA 2
+#define I2C_SCL 3
 
 uint32_t hlog = 0;
 
@@ -24,10 +24,10 @@ int main(void) {
     int16_t i;
     int16_t ret;
 
-    while (hlog < 0xFFFF) {
+    while (hlog < 64000) {
         ret = eeprom_read(i2c1, addr_eeprom, hlog, rbuf, 500);
         hlog += 500;
-        for (i = 0; i < 500; i++) printf("%c", rbuf[i]);
+        for (i = 0; i < 500; i++) printf("%x", rbuf[i]);
         sleep_ms(100);
     }
     

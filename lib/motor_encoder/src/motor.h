@@ -6,8 +6,8 @@
 
 #include "quadrature_encoder.pio.h"
 
-//#define SEITEN
-#define GYAKUTEN
+#define SEITEN
+//#define GYAKUTEN
 
 // control motor
 

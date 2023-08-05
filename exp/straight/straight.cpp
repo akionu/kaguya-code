@@ -13,8 +13,9 @@ int main(void) {
 
     motor.init(motor_left_a_pin, motor_right_a_pin);
 
-    sleep_ms(10000);
-    motor.backward(1023);
+    //sleep_ms(10000);
+    //motor.backward(1023);
+    motor.forward(1023);
     while (1) {
 #if 0
         if (pwm > 1023) pwm = 500;

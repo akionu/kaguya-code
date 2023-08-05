@@ -36,13 +36,13 @@ Log::Log(uint8_t code) {
 }
 
 
-bool Log::addLog(uint32_t lat, uint32_t lon,
+bool Log::addLog(int32_t lat, int32_t lon,
                 float yaw, float roll, float pitch,
                 uint8_t seq, 
                 uint8_t buf[12]) {
     uint8_t bufw[32] = {0};
     //uint8_t buf[12] = {' '};
-    
+    rtc_get_datetime(&time);
     // 機体コード
     bufw[0] = code;
     // rtc
@@ -52,14 +52,14 @@ bool Log::addLog(uint32_t lat, uint32_t lon,
     bufw[3] = time.sec;
     // gps
     // latitude
-    bufw[4] = (lat << 24);
-    bufw[5] = (lat << 16);
-    bufw[6] = (lat << 8);
+    bufw[4] = (lat >> 24) & 0xff;
+    bufw[5] = (lat >> 16) & 0xff;
+    bufw[6] = (lat >> 8) & 0xff;
     bufw[7] = (lat & 0xff);
     // longitude
-    bufw[8] = (lon << 24);
-    bufw[9] = (lon << 16);
-    bufw[10] = (lon << 8);
+    bufw[8] = (lon >> 24) & 0xff;
+    bufw[9] = (lon >> 16) & 0xff;
+    bufw[10] = (lon >> 8) & 0xff;
     bufw[11] = (lon & 0xff);
     // yaw
     int16_t tmp = (int16_t)(yaw * 100);
@@ -98,8 +98,8 @@ void Log::showAll() {
         if (buf[31] != '\n') {
             printf("error reading log: %d\n", now);
         }
-        uint32_t lat = (buf[4] << 24) | (buf[5] << 16) | (buf[6] << 8) | buf[7];
-        uint32_t lon = (buf[8] << 24) | (buf[9] << 16) | (buf[10] << 8) | buf[11];
+        int32_t lat = (buf[4] << 24) | (buf[5] << 16) | (buf[6] << 8) | buf[7];
+        int32_t lon = (buf[8] << 24) | (buf[9] << 16) | (buf[10] << 8) | buf[11];
         printf("%c,%d.%d.%d,%d,%d,%3.2f,%3.2f,%3.2f,%d,", 
                     buf[0], // code
                     buf[1], // hour
@@ -113,6 +113,7 @@ void Log::showAll() {
                     buf[18]
         );
         for (int i = 0; i < 12; i++) printf("%c", buf[i+19]);
+        for (int i = 0; i < 32; i++) buf[i] = ' ';
         printf("\n");
     }
 }

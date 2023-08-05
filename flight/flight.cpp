@@ -41,8 +41,8 @@ Press prs;
 BNO080 bno08x;
 // 34.801604, long: 135.770988
 GPS gps(
-    34801565, // goal_lat
-    135770981, // goal_long
+    34801608, // goal_lat
+    135770959, // goal_long
     111, 92, // kyotanabe
     [](double x) {return (x*x);}
     );
@@ -109,7 +109,7 @@ class Mode {
                 int8_t cnt = 0;
                 for (int8_t i = 1; i < 10; i++) {
                     // さっきより高度が低い=より下にいる（地面に近い）
-                    if ((alt_change[i-1] - alt_change[i]) > 0.05) cnt++;
+                    if ((alt_change[i-1] - alt_change[i]) > 0.03) cnt++;
                 }
                 if (cnt > 5) {
                     addLogBuf("cnt:%1d %3f fall", cnt, alt_change[9]);
@@ -165,7 +165,8 @@ class Mode {
         }
 
         int8_t expansion() {
-            motor.backward(1023);
+            //motor.backward(1023);
+            motor.forward(1023);
             if (expansionCnt > (12*SEC2CNT)) {
                 addLogBuf("cnt:%d d", expansionCnt);
                 printf("enpansion done\n");
@@ -197,6 +198,7 @@ class Mode {
 
         int8_t gnss() {
             static int8_t cnt = 10;
+            static float distlog[5] = {0};
             if (gps.isReady() && bno08x.dataAvailable()) {
                 
                 if (!bnoIsEnoughAccuracy()) {
@@ -207,10 +209,20 @@ class Mode {
                 gps.calc();
                 //printf("gps ready\n");
                 float dist = gps.getDistance();
-                if (dist < 1.0f) {
+                for (int i = 0; i < 5-1; i++) distlog[i] = distlog[i+1];
+                distlog[9] = dist;
+                int8_t dcnt = 0;
+                for (int i = 0; i < 5-1; i++) {
+                    if (abs(distlog[i]-distlog[i+1])) dcnt++;
+                }
+                if (dcnt > 3) {
+                    motor.backward(1023);
+                    return MODE_GNSS;
+                }
+                if (dist < 2.5f) {
                     return MODE_FORWARD_TOF;
                 }
-                if (dist < 3.0f) {
+                if (dist < 5.0f) {
                     gps.setFx([](double x) {return x;});
                 }
                 float dir = gps.getDirection();
@@ -250,10 +262,51 @@ class Mode {
                     return MODE_TOF;
                 }
             } else {
-                addLogBuf("cnt:%d u", expansionCnt);
                 expansionCnt++;
                 return MODE_FORWARD_TOF;
             }
+
+#if 0
+            //motor.forward(1023);
+            if (expansionCnt > (20*SEC2CNT)) {
+                printf("forwardTof done\n");
+                addLogBuf("cnt:%d d", expansionCnt);
+                motor.stop();
+                expansionCnt = 0;
+                if (isOnlyGnss) {
+                    return MODE_GOAL;
+                } else {
+                    return MODE_TOF;
+                }
+            } else {
+                if (gps.isReady() && bno08x.dataAvailable()) {
+                    gps.calc();
+                    float dir = gps.getDirection();
+                    float yaw = -bno08x.getYaw();
+                    printf("dist: %f, dir: %f, yaw: %f\n", dir, yaw);
+                    if ((yaw > dir-angle_th) && (yaw < dir+angle_th)) {
+                        printf("forward\n");
+                        addLogBuf("%3.0f f %d", dir, expansionCnt);
+                        motor.forward(1023);
+                    } 
+                    else if (yaw < (dir-angle_th)) {
+                        //printf("rightM\n");
+                        addLogBuf("%3.0f r %d", dir, expansionCnt);
+                        motor.rightH();
+                    } else if (yaw > (dir+angle_th)) {
+                        addLogBuf("%3.0f l %d", dir, expansionCnt);
+                        printf("leftM\n");
+                        motor.leftH(); 
+                    } else {
+                        printf("sikatanaku rightM\n");
+                        motor.rightH();
+                    }
+                }
+                //addLogBuf("cnt:%d u", expansionCnt);
+                expansionCnt++;
+                return MODE_FORWARD_TOF;
+            }
+#endif
         }
 
         int8_t tofm() {

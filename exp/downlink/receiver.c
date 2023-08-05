@@ -33,9 +33,9 @@ int main(void) {
 
     while (1) {
         lora_receive(uart0, rbuf);
-        uint32_t lat = (rbuf[4] << 24) | (rbuf[5] << 16) | (rbuf[6] << 8) | rbuf[7];
-        uint32_t lon = (rbuf[8] << 24) | (rbuf[9] << 16) | (rbuf[10] << 8) | rbuf[11];
-        printf("%c,%d.%d.%d,%d,%d,%3.2f,%3.2f,%3.2f,%d,", 
+        int32_t lat = (rbuf[4] << 24) | (rbuf[5] << 16) | (rbuf[6] << 8) | rbuf[7];
+        int32_t lon = (rbuf[8] << 24) | (rbuf[9] << 16) | (rbuf[10] << 8) | rbuf[11];
+        printf("%c,%d.%d.%d,%ld,%ld,%3.2f,%3.2f,%3.2f,%d,", 
                     rbuf[0], // code
                     rbuf[1], // hour
                     rbuf[2], // min
@@ -48,6 +48,7 @@ int main(void) {
                     rbuf[18]
         );
         for (int i = 0; i < 12; i++) printf("%c", rbuf[i+19]);
+        for (int i = 0; i < 32; i++) rbuf[i] = ' ';
         printf("\n");
         sleep_ms(250);
     }

@@ -16,7 +16,7 @@ class Log {
     public:
         Log(uint8_t code);
         void init();
-        bool addLog(uint32_t lat, uint32_t lon,
+        bool addLog(int32_t lat, int32_t lon,
                 float yaw, float roll, float pitch,
                 uint8_t seq, 
                 uint8_t buf[12]);

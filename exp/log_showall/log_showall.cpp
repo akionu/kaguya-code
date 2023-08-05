@@ -9,7 +9,7 @@ int main(void) {
     stdio_init_all();
     sleep_ms(2000);
     printf("hello this is log_showall\n");
-    logging.head = 1000;
+    logging.head = 64000;
     // i2c1: eeprom, tof
     i2c_init(i2c1, 1000 * 1000);
     gpio_set_function(i2c1_sda_pin, GPIO_FUNC_I2C);
