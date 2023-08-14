@@ -79,6 +79,7 @@ class Mode {
             isOnlyGnss = false;
         }
         int8_t landing() {
+            bno08x.dataAvailable();
             for (int8_t i = 1; i < 10; i++) {
                 alt_change[i-1] = alt_change[i];
             }
@@ -152,6 +153,7 @@ class Mode {
         float alt_ref;
 
         int8_t nichrome() {
+            bno08x.dataAvailable();
             if (expansionCnt > (2*SEC2CNT)) {
                 gpio_put(nichrome_pin, 0);
                 addLogBuf("cnt:%d d", expansionCnt);
@@ -167,7 +169,9 @@ class Mode {
         int8_t expansion() {
             //motor.backward(1023);
             motor.forward(1023);
-            if (expansionCnt > (12*SEC2CNT)) {
+            bno08x.dataAvailable();
+            if (expansionCnt > (40*SEC2CNT)) {
+                // left: 317348 ms, right: 398766 ms
                 addLogBuf("cnt:%d d", expansionCnt);
                 printf("enpansion done\n");
                 motor.stop();
@@ -182,6 +186,7 @@ class Mode {
 
         int8_t forwardLanding() {
             motor.forward(1023);
+            bno08x.dataAvailable();
             //printf("cnt: %d\n", cnt);
             if (expansionCnt > (5*SEC2CNT)) {
                 addLogBuf("cnt:%d d", expansionCnt);
@@ -225,19 +230,20 @@ class Mode {
                 if (dist < 5.0f) {
                     gps.setFx([](double x) {return x;});
                 }
-                float dir = gps.getDirection();
-                float yaw = -bno08x.getYaw();
+                float dir = -gps.getDirection();
+                float yaw = bno08x.getYaw();
+                float ytmp = dir - yaw;
                 printf("dist: %f, dir: %f, yaw: %f\n", dist, dir, yaw);
-                if ((yaw > dir-angle_th) && (yaw < dir+angle_th)) {
+                if ((-angle_th < ytmp) && (ytmp < angle_th)) {
                     printf("forward\n");
                     addLogBuf("%2.1f %3.0f f", dist, dir);
                     motor.forward(1023);
                 } 
-                else if (yaw < (dir-angle_th)) {
-                    //printf("rightM\n");
+                else if (ytmp > 0) {
+                    printf("rightM\n");
                     addLogBuf("%2.1f %3.0f r", dist, dir);
                     motor.rightM();
-                } else if (yaw > (dir+angle_th)) {
+                } else if (ytmp < 0) {
                     addLogBuf("%2.1f %3.0f l", dist, dir);
                     printf("leftM\n");
                     motor.leftM(); 
@@ -250,25 +256,48 @@ class Mode {
         }
         
         int8_t forwardTof() {
-            motor.forward(1023);
-            if (expansionCnt > (3*SEC2CNT)) {
-                printf("forwardTof done\n");
-                addLogBuf("cnt:%d d", expansionCnt);
-                motor.stop();
-                expansionCnt = 0;
-                if (isOnlyGnss) {
-                    return MODE_GOAL;
-                } else {
-                    return MODE_TOF;
-                }
-            } else {
-                expansionCnt++;
-                return MODE_FORWARD_TOF;
-            }
+#if 1
+            static bool is_first = true;
+            static float dir = 0.0f;
+            float th = 0.2;
 
+            if (is_first && gps.isReady()) {
+                is_first = false;
+                gps.calc();
+                dir = -gps.getDirection();
+            }
+            if (expansionCnt > (10*SEC2CNT)) {
+                printf("forwardTof done\n");
+                addLogBuf("cnt:%d d", expansionCnt);
+                motor.stop();
+                expansionCnt = 0;
+                if (isOnlyGnss) {
+                    return MODE_GOAL;
+                } else {
+                    return MODE_TOF;
+                }
+            } else if (bno08x.dataAvailable()) {
+                float yaw = bno08x.getYaw();
+                float ytmp = dir - yaw;
+
+                if ((-th < ytmp) && (ytmp < th)) {
+                    // forward
+                    motor.forward(1023);
+                    printf("forward");
+                } else if (ytmp > 0) {
+                    motor.rightM();
+                    printf("rightM");
+                } else if (ytmp < 0) {
+                    motor.leftM();
+                    printf("leftM");
+                }
+                expansionCnt++;
+            }
+#endif
 #if 0
-            //motor.forward(1023);
-            if (expansionCnt > (20*SEC2CNT)) {
+            bno08x.dataAvailable();
+            motor.forward(1023);
+            if (expansionCnt > (6*SEC2CNT)) {
                 printf("forwardTof done\n");
                 addLogBuf("cnt:%d d", expansionCnt);
                 motor.stop();
@@ -279,30 +308,6 @@ class Mode {
                     return MODE_TOF;
                 }
             } else {
-                if (gps.isReady() && bno08x.dataAvailable()) {
-                    gps.calc();
-                    float dir = gps.getDirection();
-                    float yaw = -bno08x.getYaw();
-                    printf("dist: %f, dir: %f, yaw: %f\n", dir, yaw);
-                    if ((yaw > dir-angle_th) && (yaw < dir+angle_th)) {
-                        printf("forward\n");
-                        addLogBuf("%3.0f f %d", dir, expansionCnt);
-                        motor.forward(1023);
-                    } 
-                    else if (yaw < (dir-angle_th)) {
-                        //printf("rightM\n");
-                        addLogBuf("%3.0f r %d", dir, expansionCnt);
-                        motor.rightH();
-                    } else if (yaw > (dir+angle_th)) {
-                        addLogBuf("%3.0f l %d", dir, expansionCnt);
-                        printf("leftM\n");
-                        motor.leftH(); 
-                    } else {
-                        printf("sikatanaku rightM\n");
-                        motor.rightH();
-                    }
-                }
-                //addLogBuf("cnt:%d u", expansionCnt);
                 expansionCnt++;
                 return MODE_FORWARD_TOF;
             }
@@ -331,7 +336,7 @@ class Mode {
             } else {
                 motor.stop();
                 //return MODE_TOF; // ok
-#if 0
+#if 1
                 if (bno08x.dataAvailable()) {
                     printf("bno av\n");
                     bool needmove = false;
@@ -345,7 +350,7 @@ class Mode {
                     }
                     
                     if (needmove) {
-                        sleep_ms(200);
+                        //sleep_ms(200);
                         return MODE_TOF;
                     }
                 }
@@ -393,6 +398,8 @@ class Mode {
             static bool is_first = true;
             static bool is_goal = false;
             static uint8_t cnt = 0;
+
+            bno08x.dataAvailable();
             if (cnt > 20*SEC2CNT) {
                 return MODE_SHOWLOG;
             }
@@ -426,7 +433,7 @@ class Mode {
                 if ((c = getchar_timeout_us(1000)) == 's') {
                     logging.showAll();
                 }
-                sleep_ms(1);
+                sleep_ms(10);
             }
         }
     private:
@@ -462,6 +469,7 @@ void update() {
         ret = mode.landing();
         break;
     case MODE_NICHROME:
+        gpio_put(led_pin, 1);
         ret = mode.nichrome();
         break;
     case MODE_EXPANSION:
@@ -471,6 +479,7 @@ void update() {
         ret = mode.forwardLanding();
         break;
     case MODE_GNSS:
+        gpio_put(led_pin, 0);
         ret = mode.gnss();
         break;
     case MODE_FORWARD_TOF:
@@ -509,6 +518,11 @@ int main(void) {
     
     // motor
     motor.init(motor_left_a_pin, motor_right_a_pin);
+    //
+    //
+    motor.setDirForward(1, -1);
+    //
+    //
 
     // i2c0: prs, imu
     i2c_init(i2c0, 400 * 1000);
@@ -557,6 +571,7 @@ int main(void) {
 
     // led
     gpio_init(led_pin);
+    gpio_put(led_pin, 0);
 
     // gnss
     gps.init(gnss_tx_pin, gnss_rx_pin);

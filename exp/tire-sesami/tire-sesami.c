@@ -40,19 +40,36 @@ int main(void) {
     int16_t pwm = 1023;
     uint32_t tbefore = time_us_32();
     uint32_t tafter;
+
+    uint slice = slice_left;
     while (1) {
         quadrature_encoder_update_delta(pio, sm, delta);
-        waitHuman(slice_right, pwm);
-        waitHuman(slice_left, pwm);
+        waitHuman(slice, pwm);
+        //waitHuman(slice_left, pwm);
         printf("before: ");
         printf("M1: d %6d  M2: d %6d\n", delta[0], delta[1]);
-        waitHuman(slice_right, 0);
-        waitHuman(slice_left, pwm);
+        waitHuman(slice, 0);
+        //waitHuman(slice_left, pwm);
         tafter = time_us_32();
         quadrature_encoder_update_delta(pio, sm, delta);
         printf("after: ");
         printf("M1: d %6d  M2: d %6d\n", delta[0], delta[1]);
         printf("elapsed time: %d us == %d ms\n", tafter-tbefore, (tafter-tbefore)/1000);
         pwm = -pwm;
+
+        quadrature_encoder_update_delta(pio, sm, delta);
+        waitHuman(slice, pwm);
+        //waitHuman(slice_left, pwm);
+        printf("before: ");
+        printf("M1: d %6d  M2: d %6d\n", delta[0], delta[1]);
+        waitHuman(slice, 0);
+        //waitHuman(slice_left, pwm);
+        tafter = time_us_32();
+        quadrature_encoder_update_delta(pio, sm, delta);
+        printf("after: ");
+        printf("M1: d %6d  M2: d %6d\n", delta[0], delta[1]);
+        printf("elapsed time: %d us == %d ms\n", tafter-tbefore, (tafter-tbefore)/1000);
+        pwm = -pwm;
+        slice = ((slice==slice_left) ? slice_right : slice_left);
     }
 }
