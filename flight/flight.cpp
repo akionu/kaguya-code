@@ -41,9 +41,9 @@ Press prs;
 BNO080 bno08x;
 // 34.801604, long: 135.770988
 GPS gps(
-    34801608, // goal_lat
-    135770959, // goal_long
-    111, 92, // kyotanabe
+    39716491, // goal_lat
+    140128503, // goal_long
+    111, 85, // noshiro
     [](double x) {return (x*x);}
     );
 Tof tof;
@@ -116,6 +116,7 @@ class Mode {
                     addLogBuf("cnt:%1d %3f fall", cnt, alt_change[9]);
                     isDetectFall = true;
                 }
+                //return MODE_LANDING;
             } 
             if (isDetectRise && isDetectFall) {
 
@@ -135,7 +136,7 @@ class Mode {
                     return MODE_NICHROME;
                 }
             } else {
-                landingCnt = 0;
+                //landingCnt = 0;
                 // 300s
                 if (landingCnt > (300*SEC2CNT)) {
                     if (abs(alt_change[9]-alt_ref) < 10) {
@@ -202,6 +203,7 @@ class Mode {
         }
 
         int8_t gnss() {
+#if 0
             static int8_t cnt = 10;
             static float distlog[5] = {0};
             if (gps.isReady() && bno08x.dataAvailable()) {
@@ -232,8 +234,8 @@ class Mode {
                 }
                 float dir = -gps.getDirection();
                 float yaw = bno08x.getYaw();
-                float ytmp = dir - yaw;
-                printf("dist: %f, dir: %f, yaw: %f\n", dist, dir, yaw);
+                double ytmp = (double)dir - (double)yaw;
+                printf("dist: %f, dir: %f, yaw: %f ytmp: %d\n", dist, dir, yaw, ytmp);
                 if ((-angle_th < ytmp) && (ytmp < angle_th)) {
                     printf("forward\n");
                     addLogBuf("%2.1f %3.0f f", dist, dir);
@@ -253,6 +255,7 @@ class Mode {
                 }
             }
             return MODE_GNSS;
+#endif
         }
         
         int8_t forwardTof() {
@@ -292,7 +295,9 @@ class Mode {
                     printf("leftM");
                 }
                 expansionCnt++;
+                return MODE_FORWARD_TOF;
             }
+            return MODE_FORWARD_TOF;
 #endif
 #if 0
             bno08x.dataAvailable();
@@ -520,7 +525,7 @@ int main(void) {
     motor.init(motor_left_a_pin, motor_right_a_pin);
     //
     //
-    motor.setDirForward(1, -1);
+    motor.setDirForward(-1, 1);
     //
     //
 
