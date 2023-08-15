@@ -203,6 +203,56 @@ class Mode {
         }
 
         int8_t gnss() {
+            static int8_t cnt = 10;
+            static float distlog[5] = {0};
+            if (gps.isReady() && bno08x.dataAvailable()) {
+                
+                if (!bnoIsEnoughAccuracy()) {
+                    printf("low acc: left\n");
+                    motor.leftM();
+                    return MODE_GNSS;
+                }
+                gps.calc();
+                //printf("gps ready\n");
+                float dist = gps.getDistance();
+                for (int i = 0; i < 5-1; i++) distlog[i] = distlog[i+1];
+                distlog[9] = dist;
+                int8_t dcnt = 0;
+                for (int i = 0; i < 5-1; i++) {
+                    if (abs(distlog[i]-distlog[i+1])) dcnt++;
+                }
+                if (dcnt > 3) {
+                    motor.backward(1023);
+                    return MODE_GNSS;
+                }
+                if (dist < 2.5f) {
+                    return MODE_FORWARD_TOF;
+                }
+                if (dist < 5.0f) {
+                    gps.setFx([](double x) {return x;});
+                }
+                float dir = gps.getDirection();
+                float yaw = -bno08x.getYaw();
+                printf("dist: %f, dir: %f, yaw: %f\n", dist, dir, yaw);
+                if ((yaw > dir-angle_th) && (yaw < dir+angle_th)) {
+                    printf("forward\n");
+                    addLogBuf("%2.1f %3.0f f", dist, dir);
+                    motor.forward(1023);
+                } 
+                else if (yaw < (dir-angle_th)) {
+                    //printf("rightM\n");
+                    addLogBuf("%2.1f %3.0f r", dist, dir);
+                    motor.rightM();
+                } else if (yaw > (dir+angle_th)) {
+                    addLogBuf("%2.1f %3.0f l", dist, dir);
+                    printf("leftM\n");
+                    motor.leftM(); 
+                } else {
+                    printf("sikatanaku rightM\n");
+                    motor.rightM();
+                }
+            }
+            return MODE_GNSS;
 #if 0
             static int8_t cnt = 10;
             static float distlog[5] = {0};
