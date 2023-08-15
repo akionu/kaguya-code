@@ -61,7 +61,7 @@ void Motor::leftH() {
 
 void Motor::leftM() {
     if (is_dir_set) {
-        motor_rotate(slice_left, -(int16_t)dir_left*500);
+        motor_rotate(slice_left, dir_left*500);
         motor_rotate(slice_right, dir_right*1023);
     } else {
         motor_rotate(slice_left, -500);
@@ -71,7 +71,7 @@ void Motor::leftM() {
 
 void Motor::rightM() {
     if (is_dir_set) {
-        motor_rotate(slice_left, -(int16_t)dir_left*1023);
+        motor_rotate(slice_left, dir_left*1023);
         motor_rotate(slice_right, dir_right*500);
     } else {
         motor_rotate(slice_left, -1023);

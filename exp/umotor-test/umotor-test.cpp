@@ -11,16 +11,17 @@ int main(void) {
     printf("hello, pico!\n");
 
     motor.init(motor_left_a_pin, motor_right_a_pin);
+    motor.setDirForward(-1, 1);
 
     while (1) {
         printf("forward\n");
         motor.forward(1023);
         sleep_ms(3000);
-
+/*
         printf("backward\n");
         motor.backward(1023);
         sleep_ms(3000);
-
+*/
         printf("left move\n");
         motor.leftM();
         sleep_ms(3000);
