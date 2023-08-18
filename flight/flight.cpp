@@ -177,11 +177,12 @@ class Mode {
             bno08x.dataAvailable();
             if (expansionCnt > (2*SEC2CNT)) {
                 gpio_put(nichrome_pin, 0);
-                addLogBuf("cnt:%d d", expansionCnt);
+                addLogBuf("n c:%d d", expansionCnt);
                 printf("nichrome done\n");
                 return MODE_EXPANSION;
             } else {
                 gpio_put(nichrome_pin, 1);
+                addLogBuf("n c:%d", expansionCnt);
                 expansionCnt++;
                 return MODE_NICHROME;
             }
@@ -224,7 +225,10 @@ class Mode {
 
         int8_t gnss() {
             static int8_t cnt = 10;
-            static float distlog[5] = {0};
+            static float distlog[20] = {0};
+            static bool is_stack = false;
+            static int8_t stack_cnt = 0;
+            static bool stack_left = true;
             if (gps.isReady() && bno08x.dataAvailable()) {
                 
                 if (!bnoIsEnoughAccuracy()) {
@@ -235,16 +239,34 @@ class Mode {
                 gps.calc();
                 //printf("gps ready\n");
                 float dist = gps.getDistance();
-                for (int i = 0; i < 5-1; i++) distlog[i] = distlog[i+1];
-                distlog[9] = dist;
+
+                for (int i = 0; i < 20-1; i++) distlog[i] = distlog[i+1];
+                distlog[19] = dist;
                 int8_t dcnt = 0;
-                for (int i = 0; i < 5-1; i++) {
-                    if (abs(distlog[i]-distlog[i+1])) dcnt++;
+                if (abs(distlog[0]-distlog[10]) < 0.15) dcnt++;
+                if (abs(distlog[11]-distlog[19]) < 0.15) dcnt++;
+                if (dcnt >= 2) {
+                    is_stack = true;
+                    if (stack_left) {
+                        stack_left = false;
+                        motor.leftH();
+                        addLogBuf("st! %3.1f l", dist);
+                    } else {
+                        stack_left = true;
+                        motor.rightH();
+                        addLogBuf("st! %3.1f r", dist);
+                    }
                 }
-                if (dcnt > 3) {
-                    motor.backward(1023);
-                    return MODE_GNSS;
+                if (is_stack) {
+                    if (stack_cnt > 5*SEC2CNT) {
+                        motor.stop();
+                        is_stack = false;
+                    } else {
+                        stack_cnt++;
+                        return MODE_GNSS;
+                    }
                 }
+
                 if (dist < 5.0f) {
                     gps.setFx([](double x) {return x;});                    
                 }
