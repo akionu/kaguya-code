@@ -13,12 +13,14 @@ e220_config_t lora_cfg = {
     32,     // subpacket length: 32 byte
     false,  // rssi: off
     13,     // transmitting power: 13
-    0,      // channel: 0
+    1,      // channel: 0
     false,  // rssi output: off
     true,   // mode: transparent
     20,     // wor cycle: 2 sec
     0x0000  // encryption key: 0x0000
 };
+
+
 
 int main(void) {
     uint8_t rbuf[200] = {0};
@@ -26,7 +28,8 @@ int main(void) {
     stdio_init_all();
     sleep_ms(2000);
     printf("hello, this is receiver\n");
-    
+
+
     // lora
     lora_init(uart0, &lora_pin);
     lora_config(uart0, &lora_cfg, &lora_pin);

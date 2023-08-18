@@ -14,7 +14,7 @@ extern "C" {
 
 class Log {
     public:
-        Log(uint8_t code);
+        Log(uint8_t code, uint8_t lora_ch);
         void init();
         bool addLog(int32_t lat, int32_t lon,
                 float yaw, float roll, float pitch,

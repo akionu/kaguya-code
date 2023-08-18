@@ -39,15 +39,35 @@ repeating_timer_t timer;
 Motor motor;
 Press prs;
 BNO080 bno08x;
-// 34.801604, long: 135.770988
+// NSE19(8/16) lat: 40.142646, long: 139.987610
+// NSE19(8/17) lat: 40.142647, long: 139.987595
 GPS gps(
-    39716491, // goal_lat
-    140128503, // goal_long
+    40142647, // goal_lat
+    139987595, // goal_long
     111, 85, // noshiro
+#ifdef CODE_A
     [](double x) {return (x*x);}
+#endif
+#ifdef CODE_B
+    [](double x) {return x*(2-x);}
+#endif
+#ifdef CODE_C
+    [](double x) {return (x*x);}
+#endif
     );
 Tof tof;
-Log logging('A');
+
+#ifdef CODE_A
+Log logging('A', 0);
+#endif //CODE_A
+
+#ifdef CODE_B
+Log logging('B', 1);
+#endif //CODE_B
+
+#ifdef CODE_C
+Log logging('C', 2);
+#endif //CODE_C
 
 uint8_t logbuf[12];
 bool rt_flag = false;
@@ -97,10 +117,10 @@ class Mode {
                 int8_t cnt = 0;
                 for (int8_t i = 1; i < 10; i++) {
                     // さっきより高度が高い=より上にいる
-                    if ((alt_change[i] - alt_change[i-1]) > 0.05) cnt++;
+                    if ((alt_change[i] - alt_change[i-1]) > 0.3) cnt++;
                     //printf("isDetectRise: %d\n", cnt);
                 }
-                if (cnt > 5) {
+                if (cnt > 4) {
                     addLogBuf("c:%1d %3f rise", cnt, alt_change[9]);
                     isDetectRise = true;
                 }
@@ -110,9 +130,9 @@ class Mode {
                 int8_t cnt = 0;
                 for (int8_t i = 1; i < 10; i++) {
                     // さっきより高度が低い=より下にいる（地面に近い）
-                    if ((alt_change[i-1] - alt_change[i]) > 0.03) cnt++;
+                    if ((alt_change[i-1] - alt_change[i]) > 0.5) cnt++;
                 }
-                if (cnt > 5) {
+                if (cnt > 4) {
                     addLogBuf("cnt:%1d %3f fall", cnt, alt_change[9]);
                     isDetectFall = true;
                 }
@@ -225,11 +245,14 @@ class Mode {
                     motor.backward(1023);
                     return MODE_GNSS;
                 }
-                if (dist < 2.5f) {
-                    return MODE_FORWARD_TOF;
-                }
                 if (dist < 5.0f) {
-                    gps.setFx([](double x) {return x;});
+                    gps.setFx([](double x) {return x;});                    
+                }
+                if (dist < 3.0f) {
+                    forwardYaw = gps.getDirection();
+                }
+                if (dist < 2.3f) {
+                    return MODE_FORWARD_TOF;
                 }
                 float dir = gps.getDirection();
                 float yaw = -bno08x.getYaw();
@@ -240,7 +263,7 @@ class Mode {
                     motor.forward(1023);
                 } 
                 else if (yaw < (dir-angle_th)) {
-                    //printf("rightM\n");
+                    printf("rightM\n");
                     addLogBuf("%2.1f %3.0f r", dist, dir);
                     motor.rightM();
                 } else if (yaw > (dir+angle_th)) {
@@ -310,16 +333,10 @@ class Mode {
         
         int8_t forwardTof() {
 #if 1
-            static bool is_first = true;
-            static float dir = 0.0f;
+            float dir = forwardYaw;
             float th = 0.2;
 
-            if (is_first && gps.isReady()) {
-                is_first = false;
-                gps.calc();
-                dir = -gps.getDirection();
-            }
-            if (expansionCnt > (10*SEC2CNT)) {
+            if (expansionCnt > (30*SEC2CNT)) {
                 printf("forwardTof done\n");
                 addLogBuf("cnt:%d d", expansionCnt);
                 motor.stop();
@@ -330,19 +347,29 @@ class Mode {
                     return MODE_TOF;
                 }
             } else if (bno08x.dataAvailable()) {
-                float yaw = bno08x.getYaw();
-                float ytmp = dir - yaw;
+                float yaw = -bno08x.getYaw();
 
-                if ((-th < ytmp) && (ytmp < th)) {
-                    // forward
+                if ((yaw > dir-th) && (yaw < dir+th)) {
+                    printf("straight ");
                     motor.forward(1023);
-                    printf("forward");
-                } else if (ytmp > 0) {
+                } else if (yaw < (dir-th)) {
+                    // 右旋回
+                    printf("right    ");
                     motor.rightM();
-                    printf("rightM");
-                } else if (ytmp < 0) {
+                    sleep_ms(200);
+                    motor.stop();
+                } else if (yaw > (dir+th)) {
+                    // 左旋回
+                    //pwm = -pwm;
+                    printf("left     ");
                     motor.leftM();
-                    printf("leftM");
+                    sleep_ms(200);
+                    motor.stop();
+                } else {
+                    printf("s-right  ");
+                    motor.rightM();
+                    sleep_ms(200);
+                    motor.stop();
                 }
                 expansionCnt++;
                 return MODE_FORWARD_TOF;
@@ -372,10 +399,11 @@ class Mode {
         int8_t tofm() {
             static bool is_first = true;
             static int16_t trycnt = 0;
+            static bool dirw_left = true;
             bool is_cone = false;
             printf("tofm\n");
 
-            if (trycnt > (300*SEC2CNT)) {
+            if (trycnt > (60*SEC2CNT)) {
                 addLogBuf("tcnt:%d d", trycnt);
                 printf("trycnt over th\n");
                 return MODE_GOAL;
@@ -405,7 +433,8 @@ class Mode {
                     }
                     
                     if (needmove) {
-                        //sleep_ms(200);
+                        sleep_ms(200);
+                        motor.stop();
                         return MODE_TOF;
                     }
                 }
@@ -434,9 +463,18 @@ class Mode {
                                     motor.forward(900);
                                 }
                             } else {
-                                addLogBuf("no cone l");
-                                printf("no cone...left\n");
-                                motor.leftH();
+                                if (dirw_left) {
+                                    dirw_left = false;
+                                    addLogBuf("no cone l");
+                                    printf("no cone...left\n");
+                                    motor.leftH();
+                                } else {
+                                    dirw_left = true;
+                                    addLogBuf("no cone r");
+                                    motor.rightH();
+                                }
+                                
+                                
                             }
                         }
                         cnt++;
@@ -501,6 +539,8 @@ class Mode {
         uint16_t expansionCnt;
         // tof dame
         bool isOnlyGnss;
+        // forwardTof
+        float forwardYaw;
  } mode;
 
 bool rtCallback(repeating_timer_t* rt) {
@@ -575,7 +615,17 @@ int main(void) {
     motor.init(motor_left_a_pin, motor_right_a_pin);
     //
     //
+#ifdef CODE_A
     motor.setDirForward(-1, 1);
+#endif //CODE_A
+
+#ifdef CODE_B
+    motor.setDirForward(-1, 1);
+#endif //CODE_B
+
+#ifdef CODE_C
+    motor.setDirForward(1, -1);
+#endif //CODE_C
     //
     //
 

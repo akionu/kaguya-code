@@ -4,7 +4,7 @@
 #include "../../ulib/umotor/umotor.h"
 #include "../../lib/pico-bno08x/src/pico-bno08x.h"
 #define CONST_180_DIVIDED_BY_PI 57.2957795130823
-
+#define mabs(x) ((x<0)?(-x):(x))
 BNO080 bno08x;
 Motor motor;
 
@@ -16,27 +16,86 @@ bool rtCallback(repeating_timer_t* rt) {
     return true;
 }
 
-void control(float yawtobe) {
-    float yaw;
+void control(double dir) {
     float th = 0.2;
     if (bno08x.dataAvailable()) {
-        yaw = bno08x.getYaw();
-        float ytmp = yawtobe - yaw;
-
+        double yaw = -bno08x.getYaw();
+        double ytmp = 0;
+        //double ytmp = (dir/(double)M_PI) - (yaw/(double)M_PI);
+#if 0
+        ytmp = (dir) - (yaw);
         if ((-th < ytmp) && (ytmp < th)) {
             // forward
-            motor.forward(1023);
-        } else if (ytmp > 0) {
-            motor.rightH();
-        } else if (ytmp < 0) {
-            motor.leftH();
+            //motor.forward(1023);
+            motor.stop();
         }
-        printf("yaw: %3.2f, dir: %3.2f, ytmp: %3.2f, %s\n", 
-                    yaw * CONST_180_DIVIDED_BY_PI,
-                    yawtobe * CONST_180_DIVIDED_BY_PI,
-                    ytmp * CONST_180_DIVIDED_BY_PI,
-                    ((ytmp < 0.2) ? "straight" : ((ytmp > 0) ? "right" : "left")));
-                
+        else if ((dir > 0) && (yaw > 0)) {
+            if (dir > yaw) {
+                printf("dir > yaw, right ");
+                motor.rightH();
+            }
+            else {
+                printf("dir < yaw, left ");
+                motor.leftH();
+            }
+        } else if ((dir > 0) && (yaw < 0)) {
+            if (mabs(M_PI-ytmp) < mabs(ytmp)) motor.rightH();
+            else motor.leftH();
+        } else if ((dir < 0) && (yaw > 0)) {
+            if (mabs(M_PI+ytmp) < mabs(ytmp)) motor.leftH();
+            else motor.rightH();
+        } else if ((dir < 0) && (yaw < 0)) {
+            if (dir < yaw) motor.leftH();
+            else motor.rightH();
+        }
+#endif
+
+#if 0
+        ytmp = (dir) - (yaw);
+        if (ytmp < 2*M_PI) ytmp += M_PI;
+        else if (ytmp > 2*M_PI) ytmp -= M_PI;
+        if ((-th+M_PI < ytmp) && (ytmp < th+M_PI)) {
+            // forward
+            //motor.forward(1023);
+            motor.stop();
+            printf("forward ");
+        } else if (ytmp > M_PI) {
+            motor.rightH();
+            printf("right   ");
+        } else if (ytmp < M_PI) {
+            motor.leftH();
+            printf("left    ");
+        }
+#endif
+
+        if ((yaw > dir-th) && (yaw < dir+th)) {
+            printf("straight ");
+            motor.stop();
+        } else if (yaw < (dir-th)) {
+            // 右旋回
+            printf("right    ");
+            motor.rightM();
+            sleep_ms(200);
+            motor.stop();
+        } else if (yaw > (dir+th)) {
+            // 左旋回
+            //pwm = -pwm;
+            printf("left     ");
+            motor.leftM();
+            sleep_ms(200);
+            motor.stop();
+        } else {
+            printf("s-right  ");
+            motor.rightM();
+            sleep_ms(200);
+            motor.stop();
+        }
+
+        printf("yaw: %+03.2f, dir: %+03.2f, ytmp: %+03.2f, %s\n", 
+            yaw * CONST_180_DIVIDED_BY_PI,
+            dir * CONST_180_DIVIDED_BY_PI,
+            ytmp * CONST_180_DIVIDED_BY_PI,
+            (((-th < ytmp) && (ytmp < th)) ? "straight" : ((ytmp > 0) ? "right" : "left")));
     }
 }
 
@@ -49,7 +108,7 @@ int main(void) {
     motor.init(motor_left_a_pin, motor_right_a_pin);
     //
     //
-    motor.setDirForward(1, -1);
+    motor.setDirForward(-1, +1);
     //
     //
 
@@ -72,9 +131,19 @@ int main(void) {
 
     add_repeating_timer_ms(-500, &rtCallback, NULL, &timer);
 
-    float yawtobe = -1.0f;
+    double yawtobe = -3.14;
+    int16_t cnt = 0;
     while (1) {
         if (rt_flag) {
+            rt_flag = false;
+            if (cnt == 10*2) {
+                // each 10 sec
+                cnt = 0;
+                yawtobe += 0.2; // about 10 deg
+            } else {
+                cnt++;
+            }
+            if (yawtobe > 3.14) yawtobe = -3.14;
             control(yawtobe);
         }
     }

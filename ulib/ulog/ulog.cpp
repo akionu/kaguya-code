@@ -1,6 +1,6 @@
 #include "ulog.h"
 
-Log::Log(uint8_t code) {
+Log::Log(uint8_t code, uint8_t lora_ch) {
     this->code = code;
     this->head = 0;
     this->time.year  = 2023;
@@ -21,7 +21,7 @@ Log::Log(uint8_t code) {
     this->lora_cfg.subpacket_len = 32;
     this->lora_cfg.rssi = false;
     this->lora_cfg.tx_power = 13;
-    this->lora_cfg.channel = 0;
+    this->lora_cfg.channel = lora_ch;
     this->lora_cfg.rssi_byte = false;
     this->lora_cfg.tx_mode_transp = true;
     this->lora_cfg.wor_cycle_div100 = 20;
@@ -34,7 +34,6 @@ Log::Log(uint8_t code) {
     lora_init(uart0, &lora_pin);
     lora_config(uart0, &lora_cfg, &lora_pin);
 }
-
 
 bool Log::addLog(int32_t lat, int32_t lon,
                 float yaw, float roll, float pitch,

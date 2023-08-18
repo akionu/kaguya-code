@@ -3,7 +3,7 @@
 #include "../../lib/kaguya-pin/kaguya-pin.h"
 #include "../../ulib/ulog/ulog.h"
 
-Log logging('X');
+Log logging('X', 0);
 
 int main(void) {
     stdio_init_all();

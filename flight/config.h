@@ -18,9 +18,12 @@ enum {
 #define SEC2CNT 2
 
 // 初期モード
-//static uint mode_now = MODE_LANDING;
-static uint mode_now = MODE_GNSS;
+static uint mode_now = MODE_LANDING;
+//static uint mode_now = MODE_GNSS;
 //static uint mode_now = MODE_FORWARD_TOF;
 
+// 機体
+//#define A
+//#define B
 
 const float angle_th = 0.39; //前45度，GPS誘導
